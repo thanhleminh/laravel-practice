@@ -1,0 +1,41 @@
+version: '3.7'
+
+services:
+  backend:
+    build: ./stacks
+    depends_on:
+      - mysql_db
+    ports:
+      - 80:80
+    environment:
+      APP_ENV:  "docker-compose"
+      APP_DEBUG: "true"
+      LOG_CHANNEL: "single"
+      XDEBUG_CONFIG: "remote_host=docker.for.mac.localhost remote_port=9000 idekey=PHPSTORM remote_enable=1"
+      PHP_IDE_CONFIG: "serverName=localhost"
+      LIMIT_TIMES_PER_HOUR: "100"
+#      QUEUE_DRIVER: 'database'
+    command: /bin/bash -c "service nginx start; composer install --no-interaction --no-dev; php artisan view:clear; php artisan cache:clear; php artisan migrate; npm install; npm run dev; php-fpm"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - main
+
+  mysql_db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - ./stacks/mysql/data:/var/lib/mysql
+    networks:
+      - main
+
+networks:
+  main:
